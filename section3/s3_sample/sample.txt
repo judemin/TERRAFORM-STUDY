@@ -1,0 +1,2 @@
+Create Bucket and sample text file
+and finally apply with terraform!

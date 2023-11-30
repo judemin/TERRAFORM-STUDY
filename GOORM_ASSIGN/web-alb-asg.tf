@@ -1,3 +1,40 @@
+############ Instance SG ##############
+resource "aws_security_group" "web_server_sg" {
+  name        = "web_server_sg"
+  description = "allow 22, 80"
+  vpc_id      = aws_vpc.goorm_vpc.id
+}
+
+resource "aws_security_group_rule" "websg_ssh" {
+  type              = "ingress"
+  from_port         = 22
+  to_port           = 22
+  protocol          = "tcp"
+  cidr_blocks       = ["0.0.0.0/0"]
+  security_group_id = aws_security_group.web_server_sg.id
+  description       = "ssh"
+}
+
+resource "aws_security_group_rule" "websg_http" {
+  type              = "ingress"
+  from_port         = 80
+  to_port           = 80
+  protocol          = "tcp"
+  cidr_blocks       = ["0.0.0.0/0"]
+  security_group_id = aws_security_group.web_server_sg.id
+  description       = "http"
+}
+
+resource "aws_security_group_rule" "websg_outbound" {
+  type              = "egress"
+  from_port         = 0
+  to_port           = 0
+  protocol          = "-1"
+  cidr_blocks       = ["0.0.0.0/0"]
+  security_group_id = aws_security_group.web_server_sg.id
+  description       = "outbound"
+}
+
 ############ Security Group #############
 # Application Load Balancer SG
 resource "aws_security_group" "web_alb_security_group" {
@@ -88,8 +125,8 @@ resource "aws_lb_target_group" "web-alb-target-group" {
 }
 
 ######## Auto Scaling Group #########
-resource "aws_launch_configuration" "goorm-web-launconfig" {
-  name            = "goorm-web-launconfig"
+resource "aws_launch_configuration" "goorm-web-launch-config" {
+  name            = "goorm-web-launchconfig"
   image_id        = "ami-01123b84e2a4fba05"
   instance_type   = "t2.micro"
   security_groups = [aws_security_group.web_server_sg.id]
@@ -110,7 +147,7 @@ resource "aws_launch_configuration" "goorm-web-launconfig" {
 
 resource "aws_autoscaling_group" "goorm-web-asg" {
   name                 = "goorm-web-asg"
-  launch_configuration = aws_launch_configuration.goorm-web-launconfig.name
+  launch_configuration = aws_launch_configuration.goorm-web-launch-config.name
   vpc_zone_identifier = [
     aws_subnet.goorm_subnet_a.id,
     aws_subnet.goorm_subnet_c.id
